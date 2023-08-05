@@ -1,0 +1,44 @@
+syntax = "proto3";
+package goldo.table;
+import "goldo/common/geometry.proto";
+
+
+
+enum CupType {
+  CUP_TYPE__UNKNOWN = 0;
+  CUP_TYPE_GREEN = 1;
+  CUP_TYPE_RED = 2;
+}
+enum CupOrientation {
+  CUP_ORIENTATION_UNKNOWN = 0;
+  CUP_ORIENTATION_STANDING = 1;
+  CUP_ORIENTATION_UPTURNED = 2;
+}
+
+message CupState {  
+  CupType type = 1;
+  CupOrientation orientation = 2;
+  goldo.common.geometry.Point position = 3;
+}
+  
+message ReefState {
+  repeated CupState cups = 1;
+}
+
+enum WindsockState {
+  WINDSOCK_UNKNOWN = 0;
+  WINDSOCK_UP = 1;
+  WINDSOCK_DOWN = 2;
+}
+
+enum CompassState {
+  COMPASS_UNKNOWN = 0;
+  COMPASS_NORTH = 1;
+  COMPASS_SOUTH = 2;
+}  
+
+message TableState {
+  map<string, ReefState> reefs = 1;
+  CupState cups = 2;
+  CompassState compas = 3;
+};

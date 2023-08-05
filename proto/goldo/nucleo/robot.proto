@@ -1,0 +1,51 @@
+syntax = "proto3";
+package goldo.nucleo.robot;
+import "goldo/pb2_options.proto";
+
+message ConfigLoadBegin {
+  uint32 size = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+}
+
+message ConfigLoadChunk {
+  bytes data = 1;
+}
+
+message ConfigLoadEnd {
+  uint32 crc = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+}
+
+message ConfigLoadStatus {
+  enum Status {
+    OK = 0;
+    CRC_ERROR = 1;
+  }
+  Status status = 1 [(goldo.pb2_options.cpp_type) = UINT8];
+}
+
+enum ServoType {
+  UNKNOWN = 0;
+  STANDARD = 1;
+  DYNAMIXEL_AX12 = 2;
+  DYNAMIXEL_MX28 = 3;
+}
+
+message ServoConfig {
+  ServoType type = 1 [(goldo.pb2_options.cpp_type) = UINT8];
+  int32 id = 2 [(goldo.pb2_options.cpp_type) = UINT8];
+  int32 cw_limit = 3 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 ccw_limit = 4 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 max_speed = 5 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 max_torque = 6 [(goldo.pb2_options.cpp_type) = UINT16];
+  string name = 64 [(goldo.pb2_options.cpp_type) = VOID];
+}
+
+message ServosConfig {
+  repeated ServoConfig servos = 1;
+}
+
+import "goldo/rplidar.proto";
+
+message RPLidarConfig {
+  float theta_offset = 1;
+  goldo.rplidar.Tresholds tresholds = 2;
+}

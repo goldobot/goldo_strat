@@ -1,0 +1,227 @@
+syntax = "proto3";
+package goldo.nucleo.propulsion;
+import "goldo/common/geometry.proto";
+import "goldo/pb2_options.proto";
+
+enum PropulsionControllerState {
+  INACTIVE = 0;
+  STOPPED = 1;
+  FOLLOW_TRAJECTORY = 2;
+  ROTATE = 3;
+  REPOSITION = 4;
+  MANUAL_CONTROL = 5;
+  EMERGENCY_STOP = 6;
+  ERROR = 7;
+}
+
+enum PropulsionControllerError {
+  ERROR_NONE = 0;
+  ERROR_EMERGENCY_STOP = 1; 
+  ERROR_ROBOT_BLOCKED = 2;
+  ERROR_TRACKING_ERROR = 3;   
+}
+
+message StateChange {
+  uint32 timestamp = 1 [(goldo.pb2_options.cpp_type) = UINT32];
+  PropulsionControllerState state = 2 [(goldo.pb2_options.cpp_type) = UINT8];
+  PropulsionControllerError error = 3 [(goldo.pb2_options.cpp_type) = UINT8];
+}
+
+message PropulsionEvent {
+  goldo.common.geometry.Pose pose = 1;  
+  float parameter = 2;
+  uint32 data1 = 3 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 data2 = 4 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 type = 5 [(goldo.pb2_options.cpp_type) = UINT8];
+}
+
+message Telemetry {
+  goldo.common.geometry.Pose pose = 1;
+  uint32 left_encoder = 2;
+  uint32 right_encoder = 3;
+  float left_pwm = 4;
+  float right_pwm = 5;
+  PropulsionControllerState state = 6;
+  uint32 error = 7;
+}
+
+message TelemetryEx {
+  goldo.common.geometry.Pose target_pose = 1;
+  float error_longi = 2;
+  float error_lateral = 3;
+  float error_yaw = 4;
+  float error_speed = 5;
+  float error_yaw_rate = 6;
+  goldo.common.geometry.Point lookahead_position = 7;
+}
+
+message MotorsVelocitySetpoints {
+  float left_vel = 1;
+  float right_vel = 2;
+  float left_current_feedforward = 3;
+  float right_current_feedforward = 4;
+}
+
+message OdometryConfig {
+  float dist_per_count_left = 1;
+  float dist_per_count_right = 2;
+  float wheel_distance_left = 3;
+  float wheel_distance_right = 4;
+  float speed_filter_frequency = 5;
+  float accel_filter_frequency = 6;
+}
+
+message PIDConfig {
+  float kp = 1;
+  float ki = 2;
+  float kd = 3;
+  float lim_i = 4;
+  float lim_d = 5;
+  float d_filter_frequency = 6;
+  float out_min = 7;
+  float out_max = 8;
+}
+
+message PropulsionLowLevelPIDConfig {
+  PIDConfig speed = 1;
+  PIDConfig longi = 2;
+  PIDConfig yaw_rate = 3;
+  PIDConfig yaw = 4;
+}
+
+message PropulsionLowLevelControllerConfig {
+  float wheels_distance = 1;
+  float motors_speed_factor = 2;
+}
+
+message PropulsionControllerConfig {
+  PropulsionLowLevelControllerConfig low_level_config = 1;
+  repeated PropulsionLowLevelPIDConfig pid_configs = 2 [(goldo.pb2_options.max_count) = 4, (goldo.pb2_options.fixed_count) = true];
+  float lookahead_distance = 3;
+  float lookahead_time = 4;
+  float static_motor_speed_limit = 5;
+  float cruise_motor_speed_limit = 6;
+  float reposition_motor_speed_limit = 7;
+  float static_torque_limit = 8;
+  float cruise_torque_limit = 9;
+  float reposition_torque_limit = 10;
+}
+
+message PropulsionTaskConfig {
+  enum MotorControllerType {
+    None = 0;
+    Pwm = 1;
+    ODriveUART =2;
+  }
+  MotorControllerType motor_controller = 1 [(goldo.pb2_options.cpp_type) = UINT8];
+  uint32 update_period_ms = 2 [(goldo.pb2_options.cpp_type) = UINT8];
+  uint32 telemetry_period_ms = 3 [(goldo.pb2_options.cpp_type) = UINT8];
+  uint32 telemetry_ex_period_ms = 4[(goldo.pb2_options.cpp_type) = UINT8];
+  uint32 pose_period_ms = 5 [(goldo.pb2_options.cpp_type) = UINT16];
+  uint32 odrive_telemetry_period_ms = 6 [(goldo.pb2_options.cpp_type) = UINT16];
+}
+
+message CommandStatus {
+  uint32 timestamp = 1 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 sequence_number = 2 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 status = 3 [(goldo.pb2_options.cpp_type) = UINT8];
+  int32 error = 4 [(goldo.pb2_options.cpp_type) = UINT8];
+}
+
+message SetMotorsTorqueLimits {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  float left = 2;
+  float right = 3;
+}
+
+message CmdEmpty {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+}
+
+message CmdSetEnable {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  bool enable = 2 [(goldo.pb2_options.cpp_type) = UINT8];
+}
+
+message CmdSetAccelerationLimits {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  float accel = 2;
+  float deccel = 3;
+  float angular_accel = 4;
+  float angular_deccel = 5;
+}
+
+message CmdSetPose {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  goldo.common.geometry.Point position = 2;
+  float yaw = 3;
+}
+
+message CmdTransformPose {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  goldo.common.geometry.Point translation = 2;
+  float rotation = 3;
+}
+
+message CmdSetTargetSpeed {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  float target_speed = 3;
+}
+
+message CmdMeasureNormal {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  float angle = 2;
+  float distance = 3;
+}
+
+message CmdSetEventSensorsMask {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  uint32 mask_rising = 2 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 mask_falling = 3 [(goldo.pb2_options.cpp_type) = UINT32];
+}
+
+message ExecuteTrajectory {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  float speed = 2;
+  float reposition_distance = 4;
+  float reposition_speed = 5;
+  repeated goldo.common.geometry.Point points = 3;
+}
+
+message ExecuteTranslation {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  float distance = 2;
+  float speed = 3;
+}
+
+message ExecuteReposition {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  float distance = 2;
+  float speed = 3;
+}
+
+message ExecuteRotation {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  float angle = 2;
+  float yaw_rate = 3;
+}
+
+message ExecuteMoveTo {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  goldo.common.geometry.Point point = 2;
+  float speed = 3;  
+}
+
+message ExecutePointTo {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  goldo.common.geometry.Point point = 2;
+  float yaw_rate = 3;  
+}
+
+message ExecuteFaceDirection {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  float yaw = 2;
+  float yaw_rate = 3;
+}
+
+

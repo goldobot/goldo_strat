@@ -1,0 +1,16 @@
+syntax = "proto3";
+package goldo.camera;
+  
+message Detections {
+  message Detection {
+    message Corner {
+    int32 x = 1;
+    int32 y = 2;
+    }
+    int32 tag_id = 1;
+    repeated Corner corners = 2;
+    float ux = 3;
+    float uy = 4;
+   }
+  repeated Detection detections = 1;
+}

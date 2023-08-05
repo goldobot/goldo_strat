@@ -1,0 +1,35 @@
+syntax = "proto3";
+package goldo.nucleo.dynamixels;
+import "goldo/pb2_options.proto";
+
+message RequestPacket {
+  enum Command {
+    UNKNOWN = 0;
+    PING = 0x01;
+    READ = 0x02;
+    WRITE = 0x03;
+    REG_WRITE = 0x04;
+    ACTION = 0x05;
+    FACTORY_RESET = 0x06;
+    REBOOT = 0x08;
+    CLEAR = 0x10;
+    STATUS = 0x55;
+    SYNC_READ = 0x82;
+    SYNC_WRITE = 0x83;
+    BULK_READ = 0x92;
+    BULK_WRITE = 0x93;
+  }
+  uint32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  uint32 protocol_version = 2 [(goldo.pb2_options.cpp_type) = UINT8];
+  uint32 id = 3 [(goldo.pb2_options.cpp_type) = UINT8];
+  Command command = 4 [(goldo.pb2_options.cpp_type) = UINT8];
+  bytes payload = 5;
+}
+
+message ResponsePacket {
+  uint32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  uint32 protocol_version = 2 [(goldo.pb2_options.cpp_type) = UINT8];
+  uint32 id = 3 [(goldo.pb2_options.cpp_type) = UINT8];
+  uint32 error_flags = 4 [(goldo.pb2_options.cpp_type) = UINT8];
+  bytes payload = 5;
+}

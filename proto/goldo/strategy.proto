@@ -1,0 +1,33 @@
+syntax = "proto3";
+package goldo.strategy;
+
+import "goldo/common/geometry.proto";
+
+message Area {
+  string name = 1;
+  oneof geometry {
+    goldo.common.geometry.Box box = 2;
+    goldo.common.geometry.Circle circle = 3;
+    goldo.common.geometry.Polygon polygo = 4;
+  }
+}
+
+message ActionConfig {
+  goldo.common.geometry.StaticPose start_pose = 1;
+  string sequence_action = 2;
+  string sequence_prepare = 3;
+  string sequence_prepare_abort = 4;
+  string sequence_on_success = 5;
+  string sequence_on_failure = 6;
+  int32 default_priority = 7;
+}
+
+message StrategyConfig {
+  map<string,ActionConfig> actions = 1;
+  repeated Area areas = 2;
+}
+
+message StrategyState {
+
+
+}

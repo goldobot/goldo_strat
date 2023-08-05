@@ -1,0 +1,40 @@
+syntax = "proto3";
+package goldo.common.geometry;
+
+message Point {
+  float x = 1;
+  float y = 2;
+}
+
+message PointCloud {
+  uint32 num_points = 1;
+  bytes data = 2;
+}
+
+message StaticPose {
+  Point position = 1;
+  float yaw = 2;
+}
+
+message Pose {
+  Point position = 1;
+  float yaw = 2;
+  float speed = 3;
+  float yaw_rate = 4;
+  float acceleration = 5;
+  float angular_acceleration = 6;
+}
+
+message Circle {
+  Point center = 1;
+  float radius = 2;
+}
+
+message Box {
+  Point pmin = 1;
+  Point pmax= 2;
+}
+
+message Polygon {
+  repeated Point vertices = 1;
+}

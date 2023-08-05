@@ -1,0 +1,105 @@
+syntax = "proto3";
+package goldo.nucleo.servos;
+import "goldo/pb2_options.proto";
+
+enum ServoType {
+  UNKNOWN = 0;
+  STANDARD = 1;
+  DYNAMIXEL_AX12 = 2;
+  DYNAMIXEL_MX28 = 3;
+  GOLDO_LIFT = 4;
+}
+
+message ServoConfig {
+  ServoType type = 1 [(goldo.pb2_options.cpp_type) = UINT8];
+  int32 id = 2 [(goldo.pb2_options.cpp_type) = UINT8];
+  int32 cw_limit = 3 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 ccw_limit = 4 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 max_speed = 5 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 max_torque = 6 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 reserved = 100 [(goldo.pb2_options.cpp_type) = VOID];
+  string name = 64 [(goldo.pb2_options.cpp_type) = VOID];
+}
+
+message LiftConfig {
+  int32 kp = 1 [(goldo.pb2_options.cpp_type) = UINT32];
+  int32 ki = 2 [(goldo.pb2_options.cpp_type) = UINT32];
+  int32 kd = 3 [(goldo.pb2_options.cpp_type) = UINT32];
+  int32 range = 4 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 pwm_clamp = 5 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 block_trig = 6 [(goldo.pb2_options.cpp_type) = UINT16];
+}
+
+message ServoState {
+  uint32 position = 2 [(goldo.pb2_options.cpp_type) = UINT16];
+  uint32 measured_position = 3 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 measured_load = 5 [(goldo.pb2_options.cpp_type) = INT16];
+}
+
+message ServoStates {
+  uint32 timestamp = 1 [(goldo.pb2_options.cpp_type) = UINT32];
+  repeated ServoState servos = 4;
+}
+
+message ServoPosition {
+  int32 servo_id = 1 [(goldo.pb2_options.cpp_type) = UINT8];
+  uint32 position = 2 [(goldo.pb2_options.cpp_type) = UINT16];
+}
+
+message ServoTorque {
+  int32 servo_id = 1 [(goldo.pb2_options.cpp_type) = UINT8];
+  uint32 torque = 2 [(goldo.pb2_options.cpp_type) = UINT8];
+}
+
+message ServoEnable {
+  int32 servo_id = 1 [(goldo.pb2_options.cpp_type) = UINT8];
+  bool enable = 2 [(goldo.pb2_options.cpp_type) = UINT8];
+}
+
+message CmdDisableAll {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+}
+
+message CmdSetEnable {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  repeated ServoEnable enables = 2;
+}
+
+message CmdLiftDoHoming {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 lift_id = 2 [(goldo.pb2_options.cpp_type) = UINT8];
+}
+
+message CmdLiftsRaw {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+
+  int32 lift1_target = 2 [(goldo.pb2_options.cpp_type) = INT32];
+  int32 lift1_bltrig = 3 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 lift1_speed = 4 [(goldo.pb2_options.cpp_type) = UINT16];
+
+  int32 lift2_target = 5 [(goldo.pb2_options.cpp_type) = INT32];
+  int32 lift2_bltrig = 6 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 lift2_speed = 7 [(goldo.pb2_options.cpp_type) = UINT16];
+}
+
+message CmdLiftSetEnable {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 lift_id = 2 [(goldo.pb2_options.cpp_type) = UINT8];
+  bool enable = 3 [(goldo.pb2_options.cpp_type) = UINT8];
+}
+
+message CmdMoveMultiple {
+  // for multiple servos move, each servo speed is computed to ensure they all finish
+  // the move at the same time. the move duration is determined by the slowest servo
+  // each servo speed is (servo.max_speed * speed / 1023)
+  // setting speed to 1023 ensures the fastest move
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 speed = 2 [(goldo.pb2_options.cpp_type) = UINT16];
+  repeated ServoPosition positions = 3;
+}
+
+
+message CmdSetMaxTorques {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  repeated ServoTorque torques = 2;
+}

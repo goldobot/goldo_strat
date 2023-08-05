@@ -1,0 +1,20 @@
+syntax = "proto3";
+package goldo.path_planner;
+import "goldo/common/geometry.proto";
+import "google/protobuf/any.proto";
+
+message PathPlannerPath {
+  repeated goldo.common.geometry.Point points = 1;
+  float cost = 2;
+}
+
+message PathPlannerRequest {
+  goldo.common.geometry.StaticPose start_pose = 1;
+  repeated goldo.common.geometry.StaticPose target_poses = 2;
+}
+
+message PathPlannerResponse {
+  repeated PathPlannerPath paths = 1;
+  google.protobuf.Any debug_info = 2;
+}
+  

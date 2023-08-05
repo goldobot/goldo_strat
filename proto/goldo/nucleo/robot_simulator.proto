@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package goldo.nucleo.robot_simulator;
+
+import "goldo/pb2_options.proto";
+
+message RobotSimulatorConfig {
+  float speed_coeff = 1;
+  float wheels_spacing = 2;
+  float encoders_spacing = 3;
+  float encoders_counts_per_m = 4;
+  uint32 encoders_period = 5 [(goldo.pb2_options.cpp_type) = UINT16];
+}

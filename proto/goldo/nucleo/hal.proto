@@ -1,0 +1,114 @@
+syntax = "proto3";
+package goldo.nucleo.hal;
+
+import "goldo/pb2_options.proto";
+
+enum GpioMode {
+  IN = 0;
+  OUT_PP = 1;
+  OUT_OD = 2;
+}
+
+enum GpioPull {
+  NONE = 0;
+  UP = 0x04;
+}
+
+message GpioConfig {
+  uint32 id = 2;
+  string name = 3;
+  string pin = 4;
+  GpioMode mode = 5;
+  GpioPull pull = 6;
+}
+
+message TimerConfig {
+  string device = 1;
+  uint32 prescaler = 4;
+  uint32 period = 5;
+}
+
+message PwmConfig {
+  string device = 1;
+}
+
+enum EncoderDirection {
+  FORWARD = 0;
+  REVERSE = 1;
+}
+
+enum EncoderMode {
+  NORMAL = 0;
+  HAL = 0x02;
+}
+
+message EncoderConfig {
+  string device = 1;
+  uint32 id = 2;
+  string name = 3;
+  EncoderMode mode = 4;
+  EncoderDirection dir = 5;
+  string ch1_pin = 6;
+  string ch2_pin = 7;
+  string ch3_pin = 8;
+  uint32 period = 9;
+}
+
+message UartConfig {
+  string device = 1;
+  uint32 id = 2;
+  string name = 3;
+  uint32 rx_buffer_size = 4;
+  uint32 tx_buffer_size = 5;
+  bool rx_blocking = 6;
+  bool tx_blocking = 7;
+  bool rx_dma = 8;
+  bool tx_dma = 9;
+  string rx_pin = 10;
+  string tx_pin = 11;
+  string txen_pin = 12;
+  uint32 baudrate = 13;
+}
+
+
+message I2cConfig {
+  string device = 1;
+  uint32 id = 2;
+  string name = 3;
+  uint32 rx_buffer_size = 4;
+  uint32 tx_buffer_size = 5;
+  bool rx_blocking = 6;
+  bool tx_blocking = 7;
+  bool rx_dma = 8;
+  bool tx_dma = 9;
+  string scl_pin = 10;
+  string sda_pin = 11;
+  uint32 timing = 12;
+}
+
+message SpiConfig {
+  string device = 1;
+  uint32 id = 2;
+  string name = 3;
+  uint32 rx_buffer_size = 4;
+  uint32 tx_buffer_size = 5;
+  bool rx_blocking = 6;
+  bool tx_blocking = 7;
+  bool rx_dma = 8;
+  bool tx_dma = 9;
+  string sck_pin = 10;
+  string mosi_pin = 11;
+  string miso_pin = 12;
+  string nss_pin = 13;
+  uint32 baudrate_prescaler = 14;
+}
+
+message HalConfig {
+  repeated GpioConfig gpio = 1;
+  repeated TimerConfig timer = 2;
+  repeated PwmConfig pwm = 3;
+  repeated EncoderConfig encoder = 4;
+  repeated UartConfig uart = 5;
+  repeated I2cConfig i2c = 6;
+  repeated SpiConfig spi = 7;
+}

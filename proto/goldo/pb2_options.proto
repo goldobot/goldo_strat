@@ -1,0 +1,28 @@
+syntax = "proto3";
+package goldo.pb2_options;
+import "google/protobuf/descriptor.proto";
+
+enum CppType {
+  UNKNOWN = 0;
+  BOOL = 1;
+  INT8 = 2;
+  UINT8 = 3;
+  INT16 = 4;
+  UINT16 = 5;
+  INT32 = 6;
+  UINT32 = 7;
+  INT64 = 8;
+  UINT64 = 9;
+  FLOAT = 10;
+  DOUBLE = 11;
+  VOID = 12;
+  }
+  
+    
+
+extend google.protobuf.FieldOptions {
+  CppType cpp_type = 50000;
+  int32 max_count = 50001;
+  bool fixed_count = 50002;
+  CppType count_type = 50003;
+}

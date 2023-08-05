@@ -1,0 +1,97 @@
+syntax = "proto3";
+package goldo.nucleo.odrive;
+import "goldo/pb2_options.proto";
+
+message RequestPacket {
+  uint32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  uint32 endpoint_id = 2 [(goldo.pb2_options.cpp_type) = UINT16];
+  uint32 expected_response_size = 3 [(goldo.pb2_options.cpp_type) = UINT16];
+  bytes payload = 4;
+  uint32 protocol_version = 5 [(goldo.pb2_options.cpp_type) = UINT16];
+}
+
+message ResponsePacket {
+  uint32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  bytes payload = 4;
+}
+
+enum AxisState {
+  UNDEFINED = 0;
+  IDLE = 1;
+  STARTUP_SEQUENCE = 2;
+  FULL_CALIBRATION_SEQUENCE = 3;
+  MOTOR_CALIBRATION = 4;
+  SENSORLESS_CONTROL = 5;
+  ENCODER_INDEX_SEARCH = 6;
+  ENCODER_OFFSET_CALIBRATION = 7;
+  CLOSED_LOOP_CONTROL = 8;
+  LOCKIN_SPIN = 9;
+  ENCODER_DIR_FIND = 10;
+  HOMING = 11;
+}
+
+enum ControlMode {
+  VOLTAGE_CONTROL = 0;
+  TORQUE_CONTROL = 1;
+  VELOCITY_CONTROL = 2;
+  POSITION_CONTROL = 3;
+}
+
+message AxisTelemetry
+{
+  float pos_estimate = 1;
+  float vel_estimate = 2;
+  float current_iq_setpoint = 3;
+}
+
+message AxisErrorState {
+  uint32 axis = 1 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 motor = 2 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 controller = 3 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 encoder = 4 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 sensorless_estimator = 5 [(goldo.pb2_options.cpp_type) = UINT32];
+}
+
+message AxisState_ {
+  AxisState current_state = 1 [(goldo.pb2_options.cpp_type) = UINT32];
+  AxisState requested_state = 2[(goldo.pb2_options.cpp_type) = UINT32];
+  ControlMode control_mode = 3 [(goldo.pb2_options.cpp_type) = UINT32];
+}
+
+message AxisErrorStates {
+  AxisErrorState axis0 = 1;
+  AxisErrorState axis1 = 2;
+}
+
+message AxisStates {
+  AxisState_ axis0 = 1;
+  AxisState_ axis1 = 2;
+}
+
+message ClientStatistics {
+  uint32 max_latency = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  uint32 timeout_errors = 2 [(goldo.pb2_options.cpp_type) = UINT16];
+  uint32 uptime = 3 [(goldo.pb2_options.cpp_type) = UINT32];
+  bool synchronized = 4;
+}
+
+
+message AxisStatus
+{
+  AxisState current_state = 1;
+  AxisState requested_state = 2;
+  ControlMode control_mode = 3;
+  AxisErrorState errors = 4;
+}
+
+message Telemetry {
+  uint32 timestamp = 1 [(goldo.pb2_options.cpp_type) = UINT32];
+  repeated AxisTelemetry axis = 2 [(goldo.pb2_options.max_count) = 2, (goldo.pb2_options.fixed_count) = true];
+}
+
+message ODriveStatus {
+  bool synchronized = 1;
+  AxisStatus axis0 = 2;
+  AxisStatus axis1 = 3;
+  ClientStatistics client_statistics = 4;
+}

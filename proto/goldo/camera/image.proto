@@ -1,0 +1,14 @@
+syntax = "proto3";
+package goldo.camera;
+  
+message Image {
+  enum Encoding {
+    UNKNOWN = 0;
+    JPEG = 1;
+  }
+
+  uint32 width = 1;
+  uint32 height = 2;
+  Encoding encoding = 3;
+  bytes data = 4;  
+}

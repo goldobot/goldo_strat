@@ -1,0 +1,37 @@
+syntax = "proto3";
+package goldo.rplidar;
+
+
+message Zones {
+  bool front_near = 1;
+  bool right_near = 2;
+  bool back_near = 3;
+  bool left_near = 4;
+  bool front_far = 5;
+  bool right_far = 6;
+  bool back_far = 7;
+  bool left_far = 8;
+}
+
+message Tresholds {
+  float near = 1;
+  float mid = 2;
+  float far = 3;
+}
+
+message RPLidarConfig {
+  float theta_offset = 1;
+  Tresholds tresholds = 2;
+}
+
+message RobotDetection {
+  uint32 timestamp_ms = 1;
+  uint32 id = 2;
+  float x = 3;
+  float y = 4;
+  float vx = 5;
+  float vy = 6;
+  float ax = 7;
+  float ay = 8;
+  uint32 detect_quality = 9;
+}

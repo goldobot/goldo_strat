@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package goldo.nucleo.statistics;
+
+import "goldo/pb2_options.proto";
+
+
+message MessageQueueStatistics {
+  uint32 min_available_capacity = 1 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 bytes_pushed = 2 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 messages_pushed = 3 [(goldo.pb2_options.cpp_type) = UINT32];
+}
+
+message CommSerializerStatistics {
+  uint32 messages_sent = 1 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 bytes_sent = 2 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 buffer_high_watermark = 3 [(goldo.pb2_options.cpp_type) = UINT32];
+}
+    
+message CommDeserializerStatistics {
+  uint32 messages_received = 1 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 bytes_received = 2 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 sequence_errors = 3 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 crc_errors = 4 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 buffer_high_watermark = 5 [(goldo.pb2_options.cpp_type) = UINT32];
+}
+
+message ODriveStreamParserStatistics {
+  uint32 bytes_received = 1 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 messages_received = 2 [(goldo.pb2_options.cpp_type) = UINT16];
+  uint32 rx_errors = 3 [(goldo.pb2_options.cpp_type) = UINT16];
+}
+  
+message ODriveStreamWriterStatistics {
+  uint32  bytes_sent = 1 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32  messages_sent = 2 [(goldo.pb2_options.cpp_type) = UINT16];
+  uint32 tx_highwater = 3 [(goldo.pb2_options.cpp_type) = UINT16];
+}
+
+message UARTCommTaskStatistics {
+  uint32 max_cycles = 1 [(goldo.pb2_options.cpp_type) = UINT32];
+  CommSerializerStatistics serializer = 2;
+  CommDeserializerStatistics deserializer = 3;
+  CommSerializerStatistics serializer_ftdi = 4;
+  CommDeserializerStatistics deserializer_fdti = 5;
+  MessageQueueStatistics queue_out = 6;
+  MessageQueueStatistics queue_out_prio = 7;
+  MessageQueueStatistics queue_out_ftdi = 8;
+}
+
+message ODriveCommTaskStatistics {
+  //uint32 max_cycles = 1 [(goldo.pb2_options.cpp_type) = UINT32];
+  ODriveStreamParserStatistics parser = 2;
+  ODriveStreamWriterStatistics writer = 3;
+  MessageQueueStatistics queue = 4;
+}
+
+message PropulsionTaskStatistics {
+  uint32 max_cycles = 1 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 min_interval = 5 [(goldo.pb2_options.cpp_type) = UINT32];
+  uint32 max_interval = 6 [(goldo.pb2_options.cpp_type) = UINT32];
+  MessageQueueStatistics queue = 2;
+  MessageQueueStatistics urgent_queue = 3;
+  MessageQueueStatistics odrive_queue = 4;
+}

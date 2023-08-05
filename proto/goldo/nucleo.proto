@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package goldo.nucleo;
+
+import "goldo/nucleo/hal.proto";
+import "goldo/nucleo/odometry.proto";
+import "goldo/nucleo/propulsion.proto";
+import "goldo/nucleo/robot_simulator.proto";
+import "goldo/nucleo/servos.proto";
+import "goldo/nucleo/odrive.proto";
+import "goldo/nucleo/statistics.proto";
+
+import "goldo/pb2_options.proto";
+
+
+enum SensorType {
+  UNKNOWN= 0;
+  NUCLEO = 1;
+  FPGA = 2;
+}
+
+message SensorConfig {
+  SensorType type = 1 [(goldo.pb2_options.cpp_type) = UINT8];
+  int32 id = 2 [(goldo.pb2_options.cpp_type) = UINT8];
+  string name = 64 [(goldo.pb2_options.cpp_type) = VOID];
+}
+
+message NucleoConfig {
+  goldo.nucleo.hal.HalConfig hal = 1;
+  goldo.nucleo.robot_simulator.RobotSimulatorConfig robot_simulator = 2;
+  goldo.nucleo.odometry.OdometryConfig odometry = 3;
+  goldo.nucleo.propulsion.PropulsionControllerConfig propulsion = 4;
+  goldo.nucleo.propulsion.PropulsionTaskConfig propulsion_task = 5;
+  repeated goldo.nucleo.servos.ServoConfig servos = 6;
+  repeated SensorConfig sensors = 7;
+  repeated string enabled_tasks = 8;
+  repeated goldo.nucleo.servos.LiftConfig lifts = 9;
+}
+
+message NucleoTasksState {
+  bool comm_uart = 1;
+}
+
+message NucleoTasksStatistics {
+  goldo.nucleo.statistics.UARTCommTaskStatistics uart_comm = 1;
+  goldo.nucleo.statistics.ODriveCommTaskStatistics odrive_comm = 2;
+  goldo.nucleo.statistics.PropulsionTaskStatistics propulsion = 3;
+}
+
+message FreeRTOSTaskStats {
+  string task_name = 1;
+  uint32 runtime_counter = 2;
+  uint32 task_number = 3;
+}
+
+message FreeRTOSTasksStats {
+  repeated FreeRTOSTaskStats tasks = 2;
+}
+
+message NucleoState {
+  bool connected = 1;
+  bool configured = 2;
+  uint32 heartbeat = 3;
+  NucleoTasksStatistics tasks_statistics = 4;
+  goldo.nucleo.odrive.ODriveStatus odrive = 5;
+  goldo.nucleo.odrive.ClientStatistics odrive_client_statistics = 6;
+
+}
+
+message ScopeChannelConfig {
+  // raw encoding are for enum or integer values.
+  // scaled values are encoded as uints with 0 corresponding to min_value and uint_max to max value.
+  enum Encoding {
+    RAW8 = 0;
+    RAW16 = 1;
+    RAW32 = 2;
+    SCALED8 = 4;
+    SCALED16 = 5;
+    SCALED32 = 6;
+    FLOAT32 = 8;
+  };
+  uint32 variable = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  uint32 encoding = 2 [(goldo.pb2_options.cpp_type) = UINT16];
+  float min_value = 3;
+  float max_value = 4;
+}
+
+message ScopeConfig {
+  uint32 period = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  repeated ScopeChannelConfig channels = 2 [(goldo.pb2_options.count_type) = UINT16, (goldo.pb2_options.max_count) = 8];
+}
+
+message ScopeData {
+  uint32 timestamp = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  bytes data = 2;
+}
+
+message ScopeChannelValues {
+  repeated float float_values = 1;
+}
+
+message ScopeValues {
+  repeated float timestamps = 1;
+  repeated ScopeChannelValues channels = 2;
+}
+

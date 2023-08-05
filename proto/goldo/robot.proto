@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package goldo.robot;
+import "goldo/nucleo.proto";
+import "goldo/rplidar.proto";
+import "goldo/table.proto";
+import "goldo/strategy.proto";
+import "goldo/common/geometry.proto";
+import "goldo/nucleo/servos.proto";
+
+import "goldo/pb2_options.proto";
+
+message RobotGeometry {
+  float front_length = 1;
+  float back_length = 2;
+  repeated goldo.common.geometry.Point outline = 3 [(goldo.pb2_options.cpp_type) = VOID];
+}
+
+message SequencesFile {
+  string path = 1;
+  string body = 2;
+}
+
+message SequencesOption {
+  string name = 1;
+  oneof default_value {
+    bool default_bool = 2;
+  };
+};
+
+message RobotConfig {
+  goldo.nucleo.NucleoConfig nucleo = 1;
+  RobotGeometry robot_geometry = 2;
+  repeated string sequences_names = 40;
+  repeated SequencesFile sequences_files = 41;
+  repeated SequencesOption sequences_options = 42;
+  goldo.rplidar.RPLidarConfig rplidar = 50;
+  goldo.strategy.StrategyConfig strategy = 60;
+}
+
+enum Side {
+  SIDE_UNKNOWN = 0;
+  SIDE_BLUE = 1;
+  SIDE_YELLOW = 2;
+}
+
+enum MatchState {
+    MATCH_IDLE = 0;
+    MATCH_PREMATCH = 1;
+    MATCH_WAIT_FOR_START_OF_MATCH = 2;
+    MATCH_MATCH = 3;
+    MATCH_MATCH_FINISHED = 4;
+}
+
+message RPLidarState {
+  bool running = 1;
+  repeated goldo.rplidar.RobotDetection detections = 10;
+  goldo.rplidar.Zones zones = 11;
+}
+
+message RobotState {
+  goldo.nucleo.NucleoState nucleo = 1;
+  map<string, bool> sensors = 2;
+  goldo.table.TableState table = 3;
+  bool emergency_stop = 4;
+  uint32 score = 5;
+  uint32 match_timer = 6;
+  Side side = 7;
+  goldo.common.geometry.Pose robot_pose = 8;
+  bool tirette = 9;
+  repeated goldo.rplidar.RobotDetection rplidar_detections = 10;
+  RPLidarState rplidar = 11;
+  MatchState match_state = 12;
+  map<string, goldo.nucleo.servos.ServoState> servos = 13;
+}

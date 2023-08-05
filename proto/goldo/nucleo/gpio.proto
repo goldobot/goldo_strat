@@ -1,0 +1,10 @@
+syntax = "proto3";
+package goldo.nucleo.gpio;
+
+import "goldo/pb2_options.proto";
+
+message CmdGpioSet {
+  int32 sequence_number = 1 [(goldo.pb2_options.cpp_type) = UINT16];
+  int32 gpio_id = 2 [(goldo.pb2_options.cpp_type) = UINT8];
+  bool value = 3 [(goldo.pb2_options.cpp_type) = UINT8];
+}
