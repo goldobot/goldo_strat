@@ -20,7 +20,7 @@ _sym_db = _pb.symbol_database.Default()
 
 LOGGER = logging.getLogger(__name__)
 
-# FIXME : TODO : import package for broker definitions..
+# FIXME : TODO : REMOVE (reminder of the old broker implementation..)
 class ZmqBrokerCmd(enum.Enum):
     PUBLISH_TOPIC = 0
     REGISTER_CALLBACK = 1
@@ -29,11 +29,6 @@ class ZmqBrokerCmd(enum.Enum):
 
 class ZmqBrokerInterface():
     def __init__(self):
-        #ctx = multiprocessing.get_context('spawn')
-        #self._conn, child_conn = ctx.Pipe()
-        #self._process = ctx.Process(target=run_broker_process, args=(child_conn,))
-        #self._process.start()
-
         local_ip = "127.0.0.1"
 
         self._zmq_context = Context.instance()
@@ -50,8 +45,6 @@ class ZmqBrokerInterface():
         self._message_available = asyncio.Event()
         self._message_available.clear()
 
-        #loop = asyncio.get_event_loop()
-        #loop.add_reader(self._socket_in.fileno(), self._message_available.set)
         self._poller.register(self._socket_in, zmq.POLLIN)
 
         self._tasks = {}
@@ -65,10 +58,11 @@ class ZmqBrokerInterface():
                 .replace('/#', r'/([^/]+)*')
                 .replace('#/', r'([^/]+)/*')
         )
-        cmd_code = ZmqBrokerCmd.REGISTER_CALLBACK.value
         new_cb_id = len(self._callbacks)
-        self._socket_out.send_multipart([cmd_code.to_bytes(1,'little'), pattern.encode('utf8'), new_cb_id.to_bytes(4,'little')])
         self._callbacks.append((re.compile(f"^{pattern}$"), new_cb_id, callback))
+        cmd_topic = "broker/admin/cmd/register_callback"
+        cmd_msg = _sym_db.GetSymbol('google.protobuf.StringValue')(value = pattern)
+        self._create_task(self.publishTopic(cmd_topic, cmd_msg))
 
     def registerForward(self, pattern: str, forward_str: str):
         pattern = (
@@ -77,13 +71,12 @@ class ZmqBrokerInterface():
                 .replace('/#', r'/([^/]+)*')
                 .replace('#/', r'([^/]+)/*')
         )
-        cmd_code = ZmqBrokerCmd.REGISTER_FORWARD.value
-        self._socket_out.send_multipart([cmd_code.to_bytes(1,'little'), pattern.encode('utf8'), forward_str.encode('utf8')])
+        cmd_topic = "broker/admin/cmd/register_forward"
+        cmd_msg = _sym_db.GetSymbol('google.protobuf.StringValue')(value = pattern+">"+forward_str)
+        self._create_task(self.publishTopic(cmd_topic, cmd_msg))
 
     async def run(self):
         while True:
-            #await self._message_available.wait()
-            #self._message_available.clear()
             events = await self._poller.poll()
 
             for s, e in events:
@@ -100,11 +93,9 @@ class ZmqBrokerInterface():
                                 msg.ParseFromString(msg_b)
                             else:
                                 msg = _sym_db.GetSymbol('google.protobuf.Empty')()
-                            await self.onTopicReceived(topic, msg, 0)
+                            await self.onTopicReceived(topic, msg)
 
-                            #print(topic, msg_class_name)
-
-    async def onTopicReceived(self, topic, msg, dummy):
+    async def onTopicReceived(self, topic, msg):
         if msg is None:
             msg = _sym_db.GetSymbol('google.protobuf.Empty')()
 
@@ -117,8 +108,7 @@ class ZmqBrokerInterface():
     async def publishTopic(self, topic, msg=None):
         if msg is None:
             msg = _sym_db.GetSymbol('google.protobuf.Empty')()
-        cmd_code = ZmqBrokerCmd.PUBLISH_TOPIC.value
-        self._socket_out.send_multipart([cmd_code.to_bytes(1,'little'), topic.encode('utf8'), msg.DESCRIPTOR.full_name.encode('utf8'), msg.SerializeToString()])
+        self._socket_out.send_multipart([topic.encode('utf8'), msg.DESCRIPTOR.full_name.encode('utf8'), msg.SerializeToString()])
 
     def _cancel_tasks(self):
         for t in self._tasks.values():
