@@ -29,7 +29,20 @@ class RPLidarUpdater:
     async def runWatchdog(self):
         while True:
             await asyncio.sleep(0.5)
+            #await asyncio.sleep(2.0)
+            #print ("==========")
             self._robot._state_proto.rplidar.running = bool(datetime.now() - self._last_message_ts < timedelta(0.5))
+            new_detections = []
+            state_proto = self._robot._state_proto
+            for d in state_proto.rplidar_detections:
+                #print (d)
+                if d.detect_quality > 0:
+                    d.detect_quality = d.detect_quality - 1
+                    new_detections.append(d)
+            del state_proto.rplidar_detections[:]
+            state_proto.rplidar_detections.extend(new_detections)
+            del state_proto.rplidar.detections[:]
+            state_proto.rplidar.detections.extend(state_proto.rplidar_detections)
 
     async def onDetectionsMsg(self, msg):
         self._last_message_ts = datetime.now()
@@ -41,6 +54,7 @@ class RPLidarUpdater:
         state_proto = self._robot._state_proto
         self._detections_ts[msg.id] = datetime.now()
         added = False
+        msg.detect_quality = 3
         for d in state_proto.rplidar_detections:
             if d.id == msg.id:
                 d.CopyFrom(msg)

@@ -96,7 +96,7 @@ class PropulsionCommands:
         self.speed = 1
         self.yaw_rate = 4
 
-        self.rplidar_shmem_fd = open("rplidar_shmem.txt","a+b")
+        self.rplidar_shmem_fd = open("/home/goldorak/workspace/goldo_main/rplidar_shmem.txt","a+b")
         self.rp_shmem = mmap.mmap(self.rplidar_shmem_fd.fileno(), 4096, access=mmap.ACCESS_WRITE, offset=0)
 
         # FIXME : TODO
@@ -257,71 +257,86 @@ class PropulsionCommands:
         await self._publish_sequence('nucleo/in/propulsion/cmd/move_to', msg)
         await future
 
-    async def moveToRetry_old(self, p, speed):
-        cp = self.pose
-        cp = (cp.position.x, cp.position.y)
-        points = [cp, p]
-        i = 1
-        s = speed
-        while True:
-            try:
-                await self.moveTo(points[i], s)
-                if i == 1:
-                    return
-                await asyncio.sleep(2)
-            except PropulsionError as e:
-                await self.clearError()
-            i = (i + 1) % 2
-            s = speed * 0.5
-
-    async def moveToRetry(self, p, speed, retreat_dist=-0.15, retries=10, eternal_sleep=True):
-        #LOGGER.debug("********************************************")
-        #LOGGER.debug("**                                        **")
-        #LOGGER.debug("** moveToRetry()                          **")
-        #LOGGER.debug("**                                        **")
-        #LOGGER.debug("********************************************")
+    async def moveToRetry(self, p, speed, retreat_dist=-0.15, retries=10, eternal_sleep=True, retry_speed_factor=1.0):
+        LOGGER.debug("********************************************")
+        LOGGER.debug("**                                        **")
+        LOGGER.debug("** moveToRetry()                          **")
+        LOGGER.debug("**                                        **")
+        LOGGER.debug("********************************************")
         cp0_x = self.pose.position.x
         cp0_y = self.pose.position.y
         s = speed
         retreat_dist=abs(retreat_dist)
-        for i in range(1,retries):
+        for i in range(0,retries):
             try:
-                #LOGGER.debug("********************************************")
-                #LOGGER.debug("    # {:d}".format(i))
-                #LOGGER.debug("********************************************")
+                LOGGER.debug("********************************************")
+                LOGGER.debug("    # {:d}".format(i))
+                LOGGER.debug("********************************************")
                 await self.moveTo(p, s)
                 await asyncio.sleep(0.5)
+                LOGGER.debug("  moveToRetry() OK")
                 return
             except PropulsionError as e:
-                #LOGGER.debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                #LOGGER.debug("    EXCEPTION !")
-                #LOGGER.debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                LOGGER.debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                LOGGER.debug("    EXCEPTION !")
+                LOGGER.debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                LOGGER.debug("  DISABLE DETECTION")
+                self.adversary_detection_enable = False
+                self.rp_shmem[0] = 0x00
+                await asyncio.sleep(0.2)
+                LOGGER.debug("  PROPULSION DISABLE/ENABLE (to clear error)")
+                self.setEnable(False)
+                await asyncio.sleep(0.2)
+                self.setEnable(True)
+                await asyncio.sleep(0.2)
+                self.setMotorsEnable(True)
+                await asyncio.sleep(0.2)
+                LOGGER.debug("  re-clear error")
                 await self.clearError()
-                await asyncio.sleep(0.1)
-            self.adversary_detection_enable = False
-            self.rp_shmem[0] = 0x00
-            await asyncio.sleep(0.5)
-            cp_x = self.pose.position.x
-            cp_y = self.pose.position.y
-            cp_yaw = self.pose.yaw
-            #LOGGER.debug ("cp0 = ({:f}, {:f})".format(cp0_x, cp0_y))
-            #LOGGER.debug ("cp = ({:f}, {:f})".format(cp_x, cp_y))
-            dx = cp_x - cp0_x
-            dy = cp_y - cp0_y
-            #LOGGER.debug ("delta = ({:f}, {:f})".format(dx, dy))
-            max_dist = np.sqrt(dx*dx+dy*dy)
-            #LOGGER.debug ("max_dist = {:f}".format(max_dist))
-            if (max_dist>retreat_dist):
-                max_dist = retreat_dist
-            if ((dx*np.cos(cp_yaw)+dy*np.sin(cp_yaw))>0):
-                escape_dist = -max_dist
-            else:
-                escape_dist = max_dist
-            await self.translation(escape_dist, s)
+                await asyncio.sleep(1.0)
+
+                LOGGER.debug("  COMPUTE RETREAT DISTANCE")
+                cp_x = self.pose.position.x
+                cp_y = self.pose.position.y
+                cp_yaw = self.pose.yaw
+                #LOGGER.debug ("cp0 = ({:f}, {:f})".format(cp0_x, cp0_y))
+                #LOGGER.debug ("cp = ({:f}, {:f})".format(cp_x, cp_y))
+                dx = cp_x - cp0_x
+                dy = cp_y - cp0_y
+                #LOGGER.debug ("delta = ({:f}, {:f})".format(dx, dy))
+                max_dist = np.sqrt(dx*dx+dy*dy)
+                #LOGGER.debug ("max_dist = {:f}".format(max_dist))
+                if (max_dist>retreat_dist):
+                    max_dist = retreat_dist
+                if ((dx*np.cos(cp_yaw)+dy*np.sin(cp_yaw))>0):
+                    escape_dist = -max_dist
+                else:
+                    escape_dist = max_dist
+                LOGGER.debug("  RETREAT {:f} mm".format(escape_dist))
+                await self.translation(escape_dist, s)
+
+            LOGGER.debug("  CHECK ADVERSARY PRESENCE")
+            while True:
+                free_path = True
+                rplidar = self._robot._state_proto.rplidar
+                for det in rplidar.detections:
+                    dx = det.x - cp_x
+                    dy = det.y - cp_y
+                    obst_dist = np.sqrt(dx*dx+dy*dy)
+                    if (obst_dist<0.3) : free_path = False
+                if free_path:
+                    break
+                await asyncio.sleep(0.5)
+                # FIXME : TODO : what to do if dumb adversary? (which frozes after contact)
+
+            LOGGER.debug("  no near adversary -> REENABLE DETECTION")
             self.adversary_detection_enable = True
             self.rp_shmem[0] = 0x01
             await asyncio.sleep(1)
-            s = speed * 0.5
+
+            LOGGER.debug("  RETRY MOVE with lower speed")
+            s = speed * retry_speed_factor
+
         LOGGER.debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         LOGGER.debug("!!                                        !!")
         LOGGER.debug("!! moveToRetry() failed                   !!")

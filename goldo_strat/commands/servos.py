@@ -90,7 +90,7 @@ class ServosCommands:
         try:
             await asyncio.wait_for(future, 5)
         except asyncio.TimeoutError:
-            LOGGER.debug('ERROR:timeout on SERVO command %s', msg)
+            LOGGER.debug('ERROR:timeout on SERVO command %s (ACK)', msg)
 
         # after the move is started, wait for the servos to stop moving        
         future2 = self._loop.create_future()
@@ -99,7 +99,7 @@ class ServosCommands:
         try:
             await asyncio.wait_for(future2, 5)
         except asyncio.TimeoutError:
-            LOGGER.debug('ERROR:timeout on SERVO command %s', msg)
+            LOGGER.debug('ERROR:timeout on SERVO command %s (COMPLETION)', msg)
 
     #async def liftDoHoming(self, id_):
     #    future2 = self._loop.create_future()
@@ -152,17 +152,20 @@ class ServosCommands:
     async def _onMsgAck(self, msg):
         future = self._futures_by_seq.pop(msg.value, None)
         if future is not None:
-            future.set_result(None)
+            if not future.done():
+                future.set_result(None)
 
     async def _onMsgMoving(self, msg):
         for e in self._futures_moving.values():
             if not (msg.value & e[1]):
-                e[0].set_result(None)
+                if not e[0].done():
+                    e[0].set_result(None)
 
     async def _on_msg_homing_done(self, msg):
         future = self._futures_lift_homing.get(msg.value)
         if future is not None:
-            future.set_result(None)
+            if not future.done():
+                future.set_result(None)
 
     async def _onServoStates(self, msg):
         for i, s in enumerate(msg.servos):
