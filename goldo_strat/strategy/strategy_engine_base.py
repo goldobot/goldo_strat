@@ -421,3 +421,4 @@ class StrategyEngineBase:
 
     def _execute_trajectory(self, path: Path):
         raise NotImplementedError
+
