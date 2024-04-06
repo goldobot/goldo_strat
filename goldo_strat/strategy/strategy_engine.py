@@ -31,7 +31,8 @@ class StrategyEngine(StrategyEngineBase):
 
         msg = _sym_db.GetSymbol('google.protobuf.BytesValue')(value=self._astar.getArr())
         await self._robot._broker.publishTopic('strategy/debug/astar_arr', msg)
-        print(self._astar.computePath((1.8, -0.7), (1.8, 0.7)))
+        # print(self._astar.computePath((1.8, -0.7), (1.8, 0.7))) # 2023
+        print(self._astar.computePath((1.8, -1.3), (1.8, 1.3)))
 
     async def display_astar(self):
         msg = _sym_db.GetSymbol('google.protobuf.BytesValue')(value=self._astar.getArr())
@@ -50,13 +51,20 @@ class StrategyEngine(StrategyEngineBase):
     def _update_path_planner(self):
         # reset astar costs
         # background
-        self._astar.fillRect((0, -1.0), (3.0, 1.0), 1)
+        # FIXME : TODO : generic code for coordinate system setting
+        #self._astar.fillRect((0, -1.0), (3.0, 1.0), 1) # 2023
+        self._astar.fillRect((0, -1.5), (2.0, 1.5), 1)
 
         # borders
-        self._astar.fillRect((0, -1.0), (0.1, 1.0), 0)
-        self._astar.fillRect((2.9, -1.0), (3.0, 1.0), 0)
-        self._astar.fillRect((0, -1.0), (3.0, -0.9), 0)
-        self._astar.fillRect((0, 1.0), (3.0, 0.9), 0)
+        # FIXME : TODO : generic code for coordinate system setting
+        #self._astar.fillRect((0, -1.0), (0.1, 1.0), 0) # 2023
+        #self._astar.fillRect((2.9, -1.0), (3.0, 1.0), 0)
+        #self._astar.fillRect((0, -1.0), (3.0, -0.9), 0)
+        #self._astar.fillRect((0, 1.0), (3.0, 0.9), 0)
+        self._astar.fillRect((0, -1.5), (0.1, 1.5), 0)
+        self._astar.fillRect((1.9, -1.5), (2.0, 1.5), 0)
+        self._astar.fillRect((0, -1.5), (2.0, -1.4), 0)
+        self._astar.fillRect((0, 1.4), (2.0, 1.5), 0)
 
         for k, v in self.obstacles.items():
             if not v.enabled:
