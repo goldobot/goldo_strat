@@ -2,9 +2,13 @@ import asyncio
 from datetime import datetime, timedelta
 import math
 
+import logging
+
 import google.protobuf as _pb
 
 _sym_db = _pb.symbol_database.Default()
+
+LOGGER = logging.getLogger(__name__)
 
 
 class RPLidarUpdater:
@@ -13,6 +17,7 @@ class RPLidarUpdater:
         self._sensors_map = {}
         self._robot._broker.registerCallback('rplidar/out/detections', self.onDetectionsMsg)
         self._robot._broker.registerCallback('rplidar/out/robot_detection', self.onRobotDetectionMsg)
+        self._robot._broker.registerCallback('rplidar/out/emergency_raise', self.onEmergencyRaiseMsg)
 
         self._last_message_ts = datetime.now() - timedelta(seconds=10)
         self._detections_ts = {}
@@ -64,3 +69,11 @@ class RPLidarUpdater:
             state_proto.rplidar_detections.append(msg)
         del state_proto.rplidar.detections[:]
         state_proto.rplidar.detections.extend(state_proto.rplidar_detections)
+
+    async def onEmergencyRaiseMsg(self, msg):
+        LOGGER.debug("!!!!!!!!!!!!!!!!!!!!!")
+        LOGGER.debug("!!!!!!!!!!!!!!!!!!!!!")
+        LOGGER.debug("!!!!  EMERGENCY  !!!!")
+        LOGGER.debug("!!!!!!!!!!!!!!!!!!!!!")
+        LOGGER.debug("!!!!!!!!!!!!!!!!!!!!!")
+
