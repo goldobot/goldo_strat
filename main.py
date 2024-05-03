@@ -100,6 +100,7 @@ if __name__ == '__main__':
 
     debug_modules = [
         'goldo_strat.commands.propulsion',
+        'goldo_strat.services.rplidar',
         'goldo_strat.zmq_broker_interface'
     ]
 
