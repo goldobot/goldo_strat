@@ -9,7 +9,7 @@ import google.protobuf.wrappers_pb2
 import google.protobuf as _pb
 
 from .strategy_engine_base import StrategyEngineBase, Action, Path
-from .strategy_engine_base import ObstacleRectangle, ObstaclePolygon
+from .strategy_engine_base import ObstacleRectangle, ObstaclePolygon, ObstacleDisk
 
 _sym_db = _pb.symbol_database.Default()
 
@@ -73,6 +73,8 @@ class StrategyEngine(StrategyEngineBase):
                 self._astar.fillPoly(v.points, 0)
             if isinstance(v, ObstacleRectangle):
                 self._astar.fillRect(v.p1, v.p2, 0)
+            if isinstance(v, ObstacleDisk):
+                self._astar.fillDisk(v.c, v.r, 0)
 
         msg = _sym_db.GetSymbol('google.protobuf.BytesValue')(value=self._astar.getArr())
         self._create_task(self._robot._broker.publishTopic('strategy/debug/astar_arr', msg))

@@ -86,6 +86,15 @@ class ObstacleRectangle:
     p1: [Tuple[float, float]] = (0, 0)
     p2: [Tuple[float, float]] = (0, 0)
 
+
+@dataclass
+class ObstacleDisk:
+    name: str
+    enabled: bool = False
+    c: [Tuple[float, float]] = (0, 0)
+    r: float
+
+
 def val_or_func(value, type_):
     if isinstance(value, type_):
         return value
