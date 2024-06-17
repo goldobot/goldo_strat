@@ -24,6 +24,8 @@ import mmap
 import os
 import time
 
+import traceback
+import inspect
 
 LOGGER = logging.getLogger(__name__)
 
@@ -216,6 +218,11 @@ class PropulsionCommands:
     async def emergencyStop(self):
         msg, future = self._create_command_msg('CmdEmpty')
         await self._publish_sequence('nucleo/in/propulsion/emergency_stop', msg)
+        await future
+
+    async def regularStop(self):
+        msg, future = self._create_command_msg('CmdEmpty')
+        await self._publish_sequence('nucleo/in/propulsion/regular_stop', msg)
         await future
 
     async def clearError(self):
