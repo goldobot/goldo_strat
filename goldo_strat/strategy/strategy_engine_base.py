@@ -41,7 +41,7 @@ class SequenceState(IntEnum):
 
 @dataclass
 class Action:
-    name: str
+    name: str = ""
     enabled: Union[bool, Callable[[], bool]] = False
     priority: int = 0
     # robot will move to begin_pose before executing action. (x, y, yaw in degrees)
@@ -74,14 +74,14 @@ class Path:
 
 @dataclass
 class ObstaclePolygon:
-    name: str
+    name: str = ""
     enabled: bool = False
     points: Sequence[Tuple[float, float]] = field(default_factory=lambda: [])
 
 
 @dataclass
 class ObstacleRectangle:
-    name: str
+    name: str = ""
     enabled: bool = False
     p1: [Tuple[float, float]] = (0, 0)
     p2: [Tuple[float, float]] = (0, 0)
@@ -89,10 +89,10 @@ class ObstacleRectangle:
 
 @dataclass
 class ObstacleDisk:
-    name: str
+    name: str = ""
     enabled: bool = False
     c: [Tuple[float, float]] = (0, 0)
-    r: float
+    r: float = 0
 
 
 def val_or_func(value, type_):

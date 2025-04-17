@@ -1,5 +1,6 @@
 from .propulsion import *
-from .servos import ServosCommands
+#from .servos import ServosCommands
+from .servos_usb2ax import ServosCommands
 from .lidar import LidarCommands
 from .odrive import ODriveCommands
 from .robot import RobotCommands

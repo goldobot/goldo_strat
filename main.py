@@ -12,6 +12,10 @@ import signal
 
 from optparse import OptionParser
 
+from goldo_shell import goldobot_shell,goldobot_shell_set_main_loop
+
+main_loop = None
+
 def rm_tree(path: Path):
     for child in path.iterdir():
         if child.is_file():
@@ -44,6 +48,10 @@ async def config_set_default(config_name, msg):
     config_path.mkdir(exist_ok=True)
     open(config_path / 'default', 'w').write(config_name)
     
+async def shell_async_wrapper():
+    await asyncio.to_thread(goldobot_shell)
+
+
 async def main():
     from goldo_strat.robot_main import RobotMain
     from goldo_strat.log_handler import GoldoLogHandler
@@ -63,10 +71,13 @@ async def main():
     logger.addHandler(handler)
     
     robot = RobotMain(broker)
+    signal.signal(signal.SIGINT, lambda sig,frame: goldo_signal_handler(broker,sig,frame))
     if 'simulation' in sys.argv:
         robot._simulation_mode = True
     if 'interactive' in sys.argv:
-        signal.signal(signal.SIGINT, lambda sig,frame: goldo_signal_handler(broker,sig,frame))
+        print ("INTERACTIVE")
+        sys.argv = [sys.argv[0]]
+        shell_task = asyncio.create_task(shell_async_wrapper())
     broker.registerCallback('config/*/put', config_put)
     broker.registerCallback('config/*/delete', config_delete)
     broker.registerCallback('config/*/set_default', config_set_default)
@@ -79,9 +90,8 @@ async def main():
     #broker.startRecording()
     await broker.run()
 
+
 if __name__ == '__main__':
-
-
     
     now=datetime.datetime.now()
     
@@ -121,5 +131,6 @@ if __name__ == '__main__':
     logger.setLevel(logging.DEBUG)
     logger.addHandler(consoleHandler)
     
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    main_loop = asyncio.get_event_loop()
+    goldobot_shell_set_main_loop(main_loop)
+    main_loop.run_until_complete(main())

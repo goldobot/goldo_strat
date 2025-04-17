@@ -76,6 +76,7 @@ class ZmqBrokerInterface():
         self._create_task(self.publishTopic(cmd_topic, cmd_msg))
 
     async def run(self):
+        print ("Broker interface running..")
         while True:
             events = await self._poller.poll()
 

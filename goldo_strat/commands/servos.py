@@ -36,6 +36,14 @@ class ServosCommands:
         for i, servo_proto in enumerate(servos_proto):
             self._servos_ids[servo_proto.name] = i
             self._servos_names.append(servo_proto.name)
+            LOGGER.debug ("DEBUG servo : {}".format(i))
+            LOGGER.debug ("  type        = {}".format(servo_proto.type))
+            LOGGER.debug ("  id          = {}".format(servo_proto.id))
+            LOGGER.debug ("  cw_limit    = {}".format(servo_proto.cw_limit))
+            LOGGER.debug ("  ccw_limit   = {}".format(servo_proto.ccw_limit))
+            LOGGER.debug ("  max_speed   = {}".format(servo_proto.max_speed))
+            LOGGER.debug ("  max_torque  = {}".format(servo_proto.max_torque))
+            LOGGER.debug ("  name        = {}".format(servo_proto.name))
 
 
     async def disableAll(self):
