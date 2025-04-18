@@ -60,7 +60,7 @@ class ServosCommands:
                 libdxl = ctypes.CDLL(path + "/libdxl.so")
             except:
                 pass
-        if not libdxl:
+        if libdxl == None:
             print('Cannot load libdxl.so, check LIBDXL_PATH')
         self.DXL = libdxl
         if self.DXL.dxl_initialize(DEVICE_ID, BAUD_RATE) != 1:
