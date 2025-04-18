@@ -61,10 +61,10 @@ class ServosCommands:
             except:
                 pass
         if not libdxl:
-            print('[%s] Cannot load libdxl.so, check LIBDXL_PATH' % self.name)
+            print('Cannot load libdxl.so, check LIBDXL_PATH')
         self.DXL = libdxl
         if self.DXL.dxl_initialize(DEVICE_ID, BAUD_RATE) != 1:
-            print('[%s] Cannot initialize device' % self.name)
+            print('Cannot initialize device USB2AX')
             self.DXL = None
 
     def loadConfig(self):
