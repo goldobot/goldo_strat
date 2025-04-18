@@ -98,7 +98,7 @@ class PropulsionCommands:
         self.speed = 1
         self.yaw_rate = 4
 
-        self.rplidar_shmem_fd = open("/home/goldorak/workspace/goldo_main/rplidar_shmem.txt","a+b")
+        self.rplidar_shmem_fd = open("/home/goldorak/workspace/common/rplidar_shmem.txt","a+b")
         self.rp_shmem = mmap.mmap(self.rplidar_shmem_fd.fileno(), 4096, access=mmap.ACCESS_WRITE, offset=0)
 
         # FIXME : TODO
