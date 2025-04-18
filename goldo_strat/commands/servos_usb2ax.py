@@ -197,3 +197,12 @@ class ServosCommands:
         await self._robot._broker.publishTopic('nucleo/in/lift/cmd_raw', hack_msg)
         # FIXME : DEBUG : awfull hack!
         await asyncio.sleep(3.0)
+
+    async def autotest(self, name, position):
+        print ("AUTOTEST:")
+        print ("  name    ={}".format(name))
+        print ("  position={}".format(position))
+        servo_proto = self._servos_protos[name]
+        print ("  id={}".format(servo_proto.id))
+        await asyncio.sleep(2.0)
+

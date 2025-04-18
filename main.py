@@ -12,7 +12,7 @@ import signal
 
 from optparse import OptionParser
 
-from goldo_shell import goldobot_shell,goldobot_shell_set_main_loop
+from goldo_shell import goldobot_shell,goldobot_shell_set_main_loop,goldobot_shell_set_robot
 
 main_loop = None
 
@@ -76,6 +76,7 @@ async def main():
         robot._simulation_mode = True
     if 'interactive' in sys.argv:
         print ("INTERACTIVE")
+        goldobot_shell_set_robot(robot)
         sys.argv = [sys.argv[0]]
         shell_task = asyncio.create_task(shell_async_wrapper())
     broker.registerCallback('config/*/put', config_put)
