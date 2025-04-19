@@ -2,7 +2,7 @@ import asyncio
 import logging
 import serial
 
-SERIAL_PORT = "/dev/ttyPneuma"
+SERIAL_PORT = "/dev/goldorak/ttyPneuma"
 BAUDRATE = 115200
 RESET = 0x00
 CANNON = 0x40
