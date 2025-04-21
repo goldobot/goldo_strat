@@ -171,6 +171,23 @@ class ServosCommands:
         # FIXME : TODO
         return self._states_proto
         
+    def printStatus(self, name_or_servos):
+        if isinstance(name_or_servos, (str, bytes)):
+            name_or_servos = [name_or_servos]
+
+        for name in name_or_servos:
+            servo_proto = self._servos_protos[name]
+            if (servo_proto.type==TYPE_DYNAMIXEL_AX12) or (servo_proto.type==TYPE_DYNAMIXEL_MX28):
+                pres_pos = self.DXL.dxl_read_word(servo_proto.id, AX_PRESENT_POSTION_L)
+                print ("ID:              {:4}".format(servo_proto.id))
+                print ("Position:        {:4}".format(pres_pos))
+            elif (servo_proto.type==TYPE_STANDARD):
+                # FIXME : TODO
+                pass
+            else:
+                # FIXME : TODO : errmsg?
+                pass
+
 
 # FIXME : DEBUG : HACK
 
