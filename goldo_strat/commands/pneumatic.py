@@ -68,7 +68,16 @@ class PneumaticCommands:
 
     def set_valves(self, a, b, c, e):
         LOGGER.info("Valves : a = " + str(a) + " | b = " + str(b) + " | c = " + str(c) + " | e = " + str(e))
-        _val = VALVES | a & 0x08 | b & 0x04 | c & 0x02 | e & 0x01
+        if (a!=0) : aa=0x08
+        else : aa=0x00
+        if (b!=0) : bb=0x04
+        else : bb=0x00
+        if (c!=0) : cc=0x02
+        else : cc=0x00
+        if (e!=0) : ee=0x01
+        else : ee=0x00
+        _val = VALVES | aa | bb | cc | ee
+        LOGGER.debug("byte send : {:2x}".format(_val))
         self._serial.write(bytes([_val]))
 
     def start_turbine(self, speed):
