@@ -151,6 +151,12 @@ class ServosCommands:
                 await asyncio.sleep(0.01)
                 self.DXL.dxl_write_word(servo_proto.id, AX_GOAL_POSITION_L, v)
                 await asyncio.sleep(0.01)
+
+                # FIXME : DEBUG
+                #pres_pos = self.DXL.dxl_read_word(servo_proto.id, AX_PRESENT_POSTION_L)
+                #if (abs(pres_pos-v)>20):
+                #    LOGGER.debug('target position not reached (pres_pos=%d), bailing out..', pres_pos)
+
             elif (servo_proto.type==TYPE_STANDARD):
                 # FIXME : DEBUG : HACK
                 ServoPosition = _sym_db.GetSymbol('goldo.nucleo.servos.ServoPosition')
@@ -187,6 +193,15 @@ class ServosCommands:
             else:
                 # FIXME : TODO : errmsg?
                 pass
+
+    def getPos(self, name):
+        servo_proto = self._servos_protos[name]
+        if (servo_proto.type==TYPE_DYNAMIXEL_AX12) or (servo_proto.type==TYPE_DYNAMIXEL_MX28):
+            pres_pos = self.DXL.dxl_read_word(servo_proto.id, AX_PRESENT_POSTION_L)
+            return pres_pos
+        else:
+            # FIXME : TODO : errmsg?
+            return 0
 
 
 # FIXME : DEBUG : HACK
