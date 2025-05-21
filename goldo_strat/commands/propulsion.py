@@ -32,15 +32,25 @@ LOGGER = logging.getLogger(__name__)
 msg_event_dico = {0:"Begin", 1:"End", 2:"Error", 3:"Cancel", 4:"Ack"}
 msg_error_dico = {0:"None", 1:"EmergencyStop", 2:"RobotBlocked", 3:"TrackingError"}
 def goldo_msg2str(msg):
-    if msg.event not in msg_event_dico.keys():
+    if 'event' in dir(msg):
+        event_val = msg.event
+        if event_val not in msg_event_dico.keys():
+            event_str = "??"
+        else:
+            event_str = msg_event_dico[event_val]
+    else:
         event_str = "??"
+        event_val = -1
+    if 'error' in dir(msg):
+        error_val = msg.error
+        if msg.error not in msg_error_dico.keys():
+            error_str = "??"
+        else:
+            error_str = msg_error_dico[error_val]
     else:
-        event_str = msg_event_dico[msg.event]
-    if msg.error not in msg_error_dico.keys():
         error_str = "??"
-    else:
-        error_str = msg_error_dico[msg.error]
-    msg_str = "[ts={} seq={} event={}({}) error={}({})]".format(msg.timestamp, msg.sequence_number, event_str, msg.event, error_str, msg.error)
+        error_val = -1
+    msg_str = "[ts={} seq={} event={}({}) error={}({})]".format(msg.timestamp, msg.sequence_number, event_str, event_val, error_str, error_val)
     return msg_str
 
 class PropulsionError(Exception):
