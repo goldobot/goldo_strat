@@ -32,8 +32,8 @@ LOGGER = logging.getLogger(__name__)
 msg_event_dico = {0:"Begin", 1:"End", 2:"Error", 3:"Cancel", 4:"Ack"}
 msg_error_dico = {0:"None", 1:"EmergencyStop", 2:"RobotBlocked", 3:"TrackingError"}
 def goldo_msg2str(msg):
-    if 'event' in dir(msg):
-        event_val = msg.event
+    if 'status' in dir(msg):
+        event_val = msg.status
         if event_val not in msg_event_dico.keys():
             event_str = "??"
         else:
