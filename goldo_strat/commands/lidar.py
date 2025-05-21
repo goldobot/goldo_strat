@@ -60,3 +60,6 @@ class LidarCommands:
             if x1 <= d.x <= x2 and y1 <= d.y <= y2:
                 return True
         return False
+
+    def getDetections(self):
+        return self._robot._state_proto.rplidar.detections

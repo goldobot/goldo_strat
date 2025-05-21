@@ -293,9 +293,9 @@ class PropulsionCommands:
                 self.rp_shmem[0] = 0x00
                 await asyncio.sleep(0.2)
                 LOGGER.debug("  PROPULSION DISABLE/ENABLE (to clear error)")
-                self.setEnable(False)
+                await self.setEnable(False)
                 await asyncio.sleep(0.2)
-                self.setEnable(True)
+                await self.setEnable(True)
                 await asyncio.sleep(0.2)
                 self.setMotorsEnable(True)
                 await asyncio.sleep(0.2)
