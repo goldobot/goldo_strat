@@ -54,7 +54,7 @@ def goldo_msg2str(msg):
         ts_val = msg.timestamp
     else:
         ts_val = "??"
-    if 'msg.sequence_number' in dir(msg):
+    if 'sequence_number' in dir(msg):
         seq_val = msg.sequence_number
     else:
         seq_val = "??"
