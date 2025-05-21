@@ -40,7 +40,7 @@ def goldo_msg2str(msg):
             event_str = msg_event_dico[event_val]
     else:
         event_str = "??"
-        event_val = -1
+        event_val = "None"
     if 'error' in dir(msg):
         error_val = msg.error
         if msg.error not in msg_error_dico.keys():
@@ -49,8 +49,16 @@ def goldo_msg2str(msg):
             error_str = msg_error_dico[error_val]
     else:
         error_str = "??"
-        error_val = -1
-    msg_str = "[ts={} seq={} event={}({}) error={}({})]".format(msg.timestamp, msg.sequence_number, event_str, event_val, error_str, error_val)
+        error_val = "None"
+    if 'timestamp' in dir(msg):
+        ts_val = msg.timestamp
+    else:
+        ts_val = "??"
+    if 'msg.sequence_number' in dir(msg):
+        seq_val = msg.sequence_number
+    else:
+        seq_val = "??"
+    msg_str = "[ts={} seq={} event={}({}) error={}({})]".format(ts_val, seq_val, event_str, event_val, error_str, error_val)
     return msg_str
 
 class PropulsionError(Exception):
