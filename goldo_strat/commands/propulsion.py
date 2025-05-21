@@ -29,6 +29,19 @@ import inspect
 
 LOGGER = logging.getLogger(__name__)
 
+msg_event_dico = {0:"Begin", 1:"End", 2:"Error", 3:"Cancel", 4:"Ack"}
+msg_error_dico = {0:"None", 1:"EmergencyStop", 2:"RobotBlocked", 3:"TrackingError"}
+def goldo_msg2str(msg):
+    if msg.event not in msg_event_dico.keys():
+        event_str = "??"
+    else:
+        event_str = msg_event_dico[msg.event]
+    if msg.error not in msg_error_dico.keys():
+        error_str = "??"
+    else:
+        error_str = msg_error_dico[msg.error]
+    msg_str = "[ts={} seq={} event={}({}) error={}({})]".format(msg.timestamp, msg.sequence_number, event_str, msg.event, error_str, msg.error)
+    return msg_str
 
 class PropulsionError(Exception):
     def __init__(self, error):
@@ -136,7 +149,7 @@ class PropulsionCommands:
         self._futures_ack.pop(sequence_number, None)
 
     def _publish(self, topic, msg=None):
-        LOGGER.debug("Propulsion publish %s %s", topic, msg)
+        LOGGER.debug("Propulsion publish %s %s", topic, goldo_msg2str(msg))
         return self._broker.publishTopic(topic, msg)
 
     async def _publish_sequence(self, topic, msg):
@@ -151,12 +164,12 @@ class PropulsionCommands:
             await asyncio.wait_for(future_ack, 5)
             return
         except asyncio.TimeoutError:
-            LOGGER.error('propulsion timeout on command %s, retry', msg)
+            LOGGER.error('propulsion timeout on command %s, retry..', goldo_msg2str(msg))
 
         try:
             await asyncio.wait_for(future_ack, 5)
         except asyncio.TimeoutError:
-            LOGGER.error('propulsion timeout on command %s', msg)
+            LOGGER.error('propulsion timeout on command %s, bailing out!', goldo_msg2str(msg))
 
     @property
     def pose(self):
@@ -514,7 +527,7 @@ class PropulsionCommands:
             self._reposition_event = msg
 
     async def _on_cmd_event(self, msg):
-        LOGGER.debug('propulsion _on_cmd_event %s', msg)
+        LOGGER.debug('propulsion _on_cmd_event %s', goldo_msg2str(msg))
         if msg.status == 4:
             LOGGER.debug('propulsion cmd ack (seq=%d)', msg.sequence_number)
             future = self._futures_ack.get(msg.sequence_number)
