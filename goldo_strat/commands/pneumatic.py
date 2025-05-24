@@ -1,108 +1,158 @@
 import asyncio
 import logging
 import serial
+import struct
+
+LOGGER = logging.getLogger(__name__)
 
 SERIAL_PORT = "/dev/goldorak/ttyPneuma"
 BAUDRATE = 115200
-RESET = 0x00
-CANNON = 0x40
-COMPRESSOR = 0x80
-VALVES = 0xC0
-LED = 0xD0
-TURBINE = 0xE0
-LCD = 0xF0
+
+
+class MsgType:
+	UNKNOWN_MSG_TYPE = 0
+	TELEMETRY_MSG = 1
+	ERROR_MSG = 2
+	COMMAND_MSG = 3
+	MAX_MSG = 4
+
+class TlmMsg:
+	UNKNOWN_TLM = 0
+	COMP_TLM = 1
+	MAX_TLM = 2
+
+class ErrorMsg:
+	UNKNOWN_ERROR = 0
+	UNKNOWN_MSG = 1
+	WRONG_HEADER = 2
+	MSG_TOO_SHORT = 3
+	WRONG_CRC = 4
+	COMPRESSOR_OVERHEATING = 5
+	COMPRESSOR_OVERPRESSURE = 6
+	MAX_ERROR = 7
+
+	errorStrings = {
+		UNKNOWN_ERROR: "Unknown error",
+		UNKNOWN_MSG: "Unknown message",
+		WRONG_HEADER: "Wrong header",
+		MSG_TOO_SHORT: "Message too short",
+		WRONG_CRC: "Wrong CRC",
+		COMPRESSOR_OVERHEATING: "Compressor overheating",
+		COMPRESSOR_OVERPRESSURE: "Compressor overpressure"
+	}
+
+class CmdMsg:
+	UNKNOWN_CMD = 0
+	COMP_ON_CMD = 1
+	COMP_OFF_CMD = 2
+	PURGE_CMD = 3
+	VALVE_ON_CMD = 4
+	VALVE_OFF_CMD = 5
+	MULTIPLE_VALVES_ON_CMD = 6
+	MULTIPLE_VALVES_OFF_CMD = 7
+	PUMP_ON_CMD = 8
+	PUMP_OFF_CMD = 9
+	MAX_CMD = 10
 
 LOGGER = logging.getLogger(__name__)
 
 class PneumaticCommands:
-    def __init__(self, robot):
-        self._robot = robot
-        self._pressure_command = 0
-        try:
-            self._serial = serial.Serial(SERIAL_PORT, BAUDRATE)
-            LOGGER.info("initialized serial port for pneumatic board on " + SERIAL_PORT)
-        except:
-            LOGGER.error("cannot initialize serial port " + SERIAL_PORT)
+	HEADER = b'\x42'
+	pressure = 0
+	temperature = 0
 
-    def reset(self):
-        LOGGER.info("Reset nucleo")
-        self._serial.write(bytes([RESET]))
+	def __init__(self, robot):
+		self._robot = robot
+		self._connect_serial()
 
-    def reset_motors(self):
-        LOGGER.info("Reset moteurs_init DSHOT")
-        self._serial.write(b'\x02')
+	def _connect_serial(self):
+		try:
+			self._serial = serial.Serial(SERIAL_PORT, BAUDRATE)
+			LOGGER.info("initialized serial port for pneumatic board on " + SERIAL_PORT)
+		except:
+			LOGGER.error("cannot initialize serial port " + SERIAL_PORT)
 
-    def stop_compressor(self):
-        LOGGER.info("Stop compressor")
-        if self._pressure_command > 0x3F:
-            self._pressure_command = 0x3F
-        _val = RESET | self._pressure_command
-        self._serial.write(bytes([_val]))
+	def _compute_crc8(self, data: bytes) -> int:
+		crc = 0
+		for b in data:
+			crc ^= b
+			for _ in range(8):
+				if crc & 0x80:
+					crc = (crc << 1) ^ 0x07
+				else:
+					crc <<= 1
+				crc &= 0xFF
+		return crc
 
-    def shoot_cannon(self, speed_left, speed_right, speed_top):
-        if speed_left > 3:
-            speed_left = 3
-        if speed_right > 3:
-            speed_right = 3
-        if speed_top > 3:
-            speed_right = 3
-        LOGGER.info("Cannon L = " + str(speed_left) + " | R = " + str(speed_right) + " | T = " + str(speed_top))
-        _val = CANNON | speed_left << 4 | speed_right << 2 | speed_top
-        self._serial.write(bytes([_val]))
+	async def _send_command_message(self, *args):
+		if len(args) == 0 :
+			raise ValueError("No command provided")
 
-    def stop_cannon(self):
-        LOGGER.info("Stop cannon")
-        self._serial.write(bytes([CANNON]))
+		# args[0] is the command
+		frame = self.HEADER + bytes([MsgType.COMMAND_MSG]) + bytes([args[0]])
 
-    def start_compressor(self, pressure):
-        self._pressure_command = pressure
-        if self._pressure_command > 0x3F:
-            self._pressure_command = 0x3F
-        LOGGER.info("Start compressor : pressure command = " + str(0.1 * self._pressure_command) + " bar")
-        _val = COMPRESSOR | pressure
-        self._serial.write(bytes([_val]))
+		# if there is a second argument, it is a value to send
+		if len(args) == 2 :
+			frame = frame + bytes([args[1]])
+		elif len(args) > 2 :
+			frame = frame + bytes([len(args) - 1])
+			for arg in args[1:] :
+				frame = frame + bytes([arg])
 
-    def purge_compressor(self):
-        LOGGER.info("Purge compressor")
-        self._serial.write(bytes([COMPRESSOR]))
+		crc = self._compute_crc8(frame)
+		try:
+			self._serial.write(frame + bytes([crc]))
+		except IOError:
+			LOGGER.error("IO error while sending command to pneumatic board")
+			self._connect_serial()
+			self._serial.write(frame + bytes([crc]))
 
-    def set_valves(self, a, b, c, e):
-        LOGGER.info("Valves : a = " + str(a) + " | b = " + str(b) + " | c = " + str(c) + " | e = " + str(e))
-        if (a!=0) : aa=0x08
-        else : aa=0x00
-        if (b!=0) : bb=0x04
-        else : bb=0x00
-        if (c!=0) : cc=0x02
-        else : cc=0x00
-        if (e!=0) : ee=0x01
-        else : ee=0x00
-        _val = VALVES | aa | bb | cc | ee
-        LOGGER.debug("byte send : {:2x}".format(_val))
-        self._serial.write(bytes([_val]))
+	# Turns the compressor on to the specified pressure (in tenth of bar)
+	async def compressor_on(self, pressure):
+		await self._send_command_message(CmdMsg.COMP_ON_CMD, pressure)
+		LOGGER.info("compressor on with pressure " + str(pressure))
 
-    def start_turbine(self, speed):
-        if speed > 3:
-            speed = 3
-        LOGGER.info("Start turbine, speed = " + str(speed))
-        _val = TURBINE | speed
-        self._serial.write(bytes([_val]))
+	# Turns the compressor off
+	async def compressor_off(self):
+		await self._send_command_message(CmdMsg.COMP_OFF_CMD)
+		LOGGER.info("compressor off")
 
-    def stop_turbine(self):
-        LOGGER.info("Stop turbine")
-        self._serial.write(bytes([TURBINE]))
+	# Turns the compressor off and opens the purge valve until the pressure is below 0.5 bar
+	async def purge(self):
+		await self._send_command_message(CmdMsg.PURGE_CMD)
+		LOGGER.info("purge")
 
-    def led_on(self):
-        LOGGER.info("LED ON")
-        self._serial.write(bytes([LED | 1]))
+	# Turns the specified valve on
+	async def valve_on(self, valve_id):
+		await self._send_command_message(CmdMsg.VALVE_ON_CMD, valve_id)
+		LOGGER.info("valve " + str(valve_id) + " on")
 
-    def led_off(self):
-        LOGGER.info("LED OFF")
-        self._serial.write(bytes([LED | 0]))
+	# Turns the specified valve off
+	async def valve_off(self, valve_id):
+		await self._send_command_message(CmdMsg.VALVE_OFF_CMD, valve_id)
+		LOGGER.info("valve " + str(valve_id) + " off")
 
-    def lcd_on(self):
-        LOGGER.info("LCD ON")
-        self._serial.write(bytes([LCD | 1]))
+	async def multiple_valves_on(self, *valves):
+		await self._send_command_message(CmdMsg.MULTIPLE_VALVES_ON_CMD, *valves)
+		LOGGER.info("valves " + str(valves) + " on")
 
-    def lcd_off(self):
-        LOGGER.info("LCD OFF")
-        self._serial.write(bytes([LCD | 0]))
+	async def _read_message(self):
+		try:
+			msgtype = 0
+			if self._serial.read(1) == self.HEADER :
+				msgtype = self._serial.read(1)
+				message = self._serial.read(1)
+				if msgtype == MsgType.TELEMETRY_MSG :
+					if message == TlmMsg.COMP_TLM :
+						payload = self._serial.read(2)
+					crc = self._serial.read(1)[0]
+					if self._compute_crc8(self.HEADER + MsgType.TELEMETRY_MSG + TlmMsg.COMP_TLM + payload) == crc:
+						self.pressure, self.temperature = struct.unpack('<BB', payload)
+						LOGGER.info(f"Pressure: {self.pressure}, Temperature: {self.temperature}")
+					else:
+						LOGGER.error("CRC mismatch")
+				elif msgtype == MsgType.ERROR_MSG :
+					LOGGER.error("Error : " + ErrorMsg.errorStrings[message])
+		except IOError:
+			LOGGER.error("IO error while reading message from pneumatic board")
+			self._connect_serial()
