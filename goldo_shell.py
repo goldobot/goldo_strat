@@ -37,11 +37,52 @@ async def async_test_ax12(name,goal):
     await my_robot._sequences_globals['servos'].move(name, goal)
 
 @goldobot_shell.command()
+def config_nucleo():
+    global my_main_loop
+    asyncio.run_coroutine_threadsafe(async_config_nucleo(),my_main_loop)
+
+async def async_config_nucleo():
+    global my_robot
+    await my_robot.configNucleo()
+
+@goldobot_shell.command()
 @click.argument('name', type=str, required=False)
 @click.argument('goal', type=int)
 def test_ax12(name="",goal=0):
     global my_main_loop
     asyncio.run_coroutine_threadsafe(async_test_ax12(name,goal),my_main_loop)
+
+@goldobot_shell.command()
+@click.argument('name', type=str, required=True)
+def execute_sequence(name=""):
+    global my_main_loop
+    asyncio.run_coroutine_threadsafe(async_execute_sequence(name),my_main_loop)
+
+async def async_execute_sequence(sequence):
+    global my_robot
+    await my_robot._sequences[sequence]()
+
+@goldobot_shell.command()
+@click.argument('addr', type=str, required=True)
+@click.argument('data', type=str, required=True)
+def fpga_write(addr,data):
+    global my_main_loop
+    asyncio.run_coroutine_threadsafe(async_fpga_write(int(addr,16),int(data,16)),my_main_loop)
+
+async def async_fpga_write(addr,data):
+    global my_robot
+    await my_robot.commands.fpgaRegWrite(addr,data)
+
+@goldobot_shell.command()
+@click.argument('addr', type=str, required=True)
+def fpga_read(addr):
+    global my_main_loop
+    asyncio.run_coroutine_threadsafe(async_fpga_read(int(addr,16)),my_main_loop)
+
+async def async_fpga_read(addr):
+    global my_robot
+    data = await my_robot.commands.fpgaRegRead(addr)
+    print ("  data = {:x}".format(data))
 
 #@goldobot_shell.command()
 #@click.argument('name', type=str)

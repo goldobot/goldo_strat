@@ -49,7 +49,8 @@ async def config_set_default(config_name, msg):
     open(config_path / 'default', 'w').write(config_name)
     
 async def shell_async_wrapper():
-    await asyncio.to_thread(goldobot_shell)
+    #await asyncio.to_thread(goldobot_shell)
+    await asyncio.get_running_loop().run_in_executor(None, goldobot_shell)
 
 
 async def main():

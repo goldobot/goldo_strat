@@ -136,6 +136,10 @@ class PneumaticCommands:
 		await self._send_command_message(CmdMsg.MULTIPLE_VALVES_ON_CMD, *valves)
 		LOGGER.info("valves " + str(valves) + " on")
 
+	async def multiple_valves_off(self, *valves):
+		await self._send_command_message(CmdMsg.MULTIPLE_VALVES_OFF_CMD, *valves)
+		LOGGER.info("valves " + str(valves) + " off")
+
 	async def _read_message(self):
 		try:
 			msgtype = 0
