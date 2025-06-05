@@ -54,13 +54,20 @@ def test_ax12(name="",goal=0):
 
 @goldobot_shell.command()
 @click.argument('name', type=str, required=True)
-def execute_sequence(name=""):
+@click.argument('arg1', type=str, required=False)
+@click.argument('arg2', type=str, required=False)
+def execute_sequence(name="",arg1=None,arg2=None):
     global my_main_loop
-    asyncio.run_coroutine_threadsafe(async_execute_sequence(name),my_main_loop)
+    asyncio.run_coroutine_threadsafe(async_execute_sequence(name,arg1,arg2),my_main_loop)
 
-async def async_execute_sequence(sequence):
+async def async_execute_sequence(sequence,arg1=None,arg2=None):
     global my_robot
-    await my_robot._sequences[sequence]()
+    if ((arg1!=None) and (arg2!=None)):
+        await my_robot._sequences[sequence](arg1,arg2)
+    elif (arg1!=None):
+        await my_robot._sequences[sequence](arg1)
+    else:
+        await my_robot._sequences[sequence]()
 
 @goldobot_shell.command()
 @click.argument('addr', type=str, required=True)
