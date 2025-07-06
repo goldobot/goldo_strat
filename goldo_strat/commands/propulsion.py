@@ -554,6 +554,14 @@ class PropulsionCommands:
             else:
                 LOGGER.debug("future not found")
 
+        # FIXME : DEBUG
+        if msg.status == 42:
+            robot_pose = self._robot._state_proto.robot_pose
+            robot_x = robot_pose.position.x
+            robot_y = robot_pose.position.y
+            robot_yaw = robot_pose.yaw*180.0/math.pi
+            LOGGER.debug("DEBUG EMERGENCY STOP (42) : robot_pose = ({},{},{})".format(robot_x, robot_y, robot_yaw))
+
         future = self._futures.get(msg.sequence_number)
 
         if future is not None:

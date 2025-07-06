@@ -260,11 +260,14 @@ class RobotMain:
         self._match_state = MatchState.Match
         self._state_proto.match_state = self._match_state
         await self._broker.publishTopic('nucleo/in/match/timer/start')
+        debug_nucleo_start_match_ts = self._state_proto.nucleo.heartbeat
         self.match_timer = 100
         self._state_proto.match_timer = self.match_timer
         await self._broker.publishTopic('gui/in/match_state',
                                         _sym_db.GetSymbol('google.protobuf.Int32Value')(value=self._match_state))
         LOGGER.info('match started')
+        # FIXME : DEBUG
+        LOGGER.info("debug_nucleo_start_match_ts = {}".format(debug_nucleo_start_match_ts))
 
         self._current_task = asyncio.create_task(self._matchSequence())
         self._current_task.add_done_callback(self.onCurrentTaskDone)
