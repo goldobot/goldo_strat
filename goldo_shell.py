@@ -4,6 +4,9 @@ from click_shell import shell
 from os import _exit
 from sys import argv
 from time import sleep
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 my_main_loop = None
 my_robot = None
@@ -53,21 +56,52 @@ def test_ax12(name="",goal=0):
     asyncio.run_coroutine_threadsafe(async_test_ax12(name,goal),my_main_loop)
 
 @goldobot_shell.command()
+def print_sequences():
+    global my_robot
+    for k in my_robot._sequences.keys():
+        print (k)
+
+@goldobot_shell.command()
 @click.argument('name', type=str, required=True)
 @click.argument('arg1', type=str, required=False)
 @click.argument('arg2', type=str, required=False)
 def execute_sequence(name="",arg1=None,arg2=None):
     global my_main_loop
+    #func = my_robot._sequences[name]
+    #print ("func = {}".format(func))
+    #func(arg1, arg2)
+    asyncio.run_coroutine_threadsafe(async_execute_sequence(name,arg1,arg2),my_main_loop)
+
+@goldobot_shell.command()
+@click.argument('name', type=str, required=True)
+@click.argument('arg1', type=str, required=False)
+@click.argument('arg2', type=str, required=False)
+def x(name="",arg1=None,arg2=None):
+    global my_main_loop
+    #func = my_robot._sequences[name]
+    #print ("func = {}".format(func))
+    #func(arg1, arg2)
     asyncio.run_coroutine_threadsafe(async_execute_sequence(name,arg1,arg2),my_main_loop)
 
 async def async_execute_sequence(sequence,arg1=None,arg2=None):
     global my_robot
-    if ((arg1!=None) and (arg2!=None)):
-        await my_robot._sequences[sequence](arg1,arg2)
-    elif (arg1!=None):
-        await my_robot._sequences[sequence](arg1)
-    else:
-        await my_robot._sequences[sequence]()
+
+    func = my_robot._sequences[sequence]
+    #print ("func = {}".format(func))
+
+    print ()
+
+    try:
+        if ((arg1!=None) and (arg2!=None)):
+            await func(arg1,arg2)
+        elif (arg1!=None):
+            await func(arg1)
+        else:
+            await func()
+    except Exception as e:
+        LOGGER.exception(e)
+
+    print ()
 
 @goldobot_shell.command()
 @click.argument('addr', type=str, required=True)
