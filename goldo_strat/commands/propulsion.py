@@ -119,6 +119,7 @@ class PropulsionCommands:
         self._broker.registerCallback('nucleo/out/propulsion/cmd_event', self._on_cmd_event)
         self._broker.registerCallback('nucleo/out/propulsion/controller/event', self._on_controller_event)
         self._broker.registerCallback('gui/in/robot_state', self._on_robot_state)
+        self._broker.registerCallback('nucleo/out/dbg_goldo', self._on_dbg_goldo)
         self.state = 0
 
         self.adversary_detection_enable = True
@@ -578,3 +579,8 @@ class PropulsionCommands:
                 future.set_result(None)
                 return
 
+    async def _on_dbg_goldo(self, msg):
+        #LOGGER.debug('dbg_goldo (int) : {:x}'.format(msg.value))
+        buff = struct.pack("<I",msg.value)
+        float_cast = struct.unpack("<f",buff)
+        LOGGER.debug('dbg_goldo (float) : {:f}'.format(float_cast[0]))
