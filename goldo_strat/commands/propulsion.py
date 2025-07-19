@@ -120,6 +120,7 @@ class PropulsionCommands:
         self._broker.registerCallback('nucleo/out/propulsion/controller/event', self._on_controller_event)
         self._broker.registerCallback('gui/in/robot_state', self._on_robot_state)
         self._broker.registerCallback('nucleo/out/dbg_goldo', self._on_dbg_goldo)
+        self._broker.registerCallback('nucleo/out/fpga/reg', self._on_dbg_goldo_ext)
         self.state = 0
 
         self.adversary_detection_enable = True
@@ -584,4 +585,26 @@ class PropulsionCommands:
         #LOGGER.debug('dbg_goldo (int) : {:x}'.format(msg.value))
         buff = struct.pack("<I",msg.value)
         float_cast = struct.unpack("<f",buff)
-        LOGGER.debug('dbg_goldo (float) : {:f}'.format(float_cast[0]))
+        LOGGER.debug('DBG_GOLDO : speed() = {:f}'.format(float_cast[0]))
+
+    async def _on_dbg_goldo_ext(self, msg):
+        _apb_addr = msg.apb_address
+        _apb_data = msg.apb_value
+        #print ("  _on_dbg_goldo_ext() : addr={:8x} data={:8x}".format(_apb_addr, _apb_data))
+        if _apb_addr==0xdb600000:
+            buff = struct.pack("<I",_apb_data)
+            float_cast = struct.unpack("<f",buff)
+            LOGGER.debug('DBG_GOLDO : m_min_parameter = {:f}'.format(float_cast[0]))
+        if _apb_addr==0xdb600001:
+            buff = struct.pack("<I",_apb_data)
+            float_cast = struct.unpack("<f",buff)
+            LOGGER.debug('DBG_GOLDO : m_max_parameter = {:f}'.format(float_cast[0]))
+        if _apb_addr==0xdb600002:
+            buff = struct.pack("<I",_apb_data)
+            float_cast = struct.unpack("<f",buff)
+            LOGGER.debug('DBG_GOLDO : m_parameter = {:f}'.format(float_cast[0]))
+        if _apb_addr==0xdb600003:
+            buff = struct.pack("<I",_apb_data)
+            float_cast = struct.unpack("<f",buff)
+            LOGGER.debug('DBG_GOLDO : m_speed = {:f}'.format(float_cast[0]))
+
