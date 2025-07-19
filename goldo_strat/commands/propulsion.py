@@ -598,11 +598,11 @@ class PropulsionCommands:
         if _apb_addr==0xdb600001:
             buff = struct.pack("<I",_apb_data)
             float_cast = struct.unpack("<f",buff)
-            LOGGER.debug('DBG_GOLDO : m_max_parameter = {:f}'.format(float_cast[0]))
+            LOGGER.debug('DBG_GOLDO : m_max_parameter = {:f} ({:x})'.format(float_cast[0],_apb_data))
         if _apb_addr==0xdb600002:
             buff = struct.pack("<I",_apb_data)
             float_cast = struct.unpack("<f",buff)
-            LOGGER.debug('DBG_GOLDO : m_parameter = {:f}'.format(float_cast[0]))
+            LOGGER.debug('DBG_GOLDO : m_parameter = {:f} ({:x})'.format(float_cast[0],_apb_data))
         if _apb_addr==0xdb600003:
             buff = struct.pack("<I",_apb_data)
             float_cast = struct.unpack("<f",buff)
